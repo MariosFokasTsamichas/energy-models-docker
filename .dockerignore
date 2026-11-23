@@ -1,0 +1,10 @@
+# Keep the build context small and explicit.
+*
+!Dockerfile
+!LICENSE
+!NOTICE
+!versions.env
+!scripts/**
+!config/**
+!examples/**
+!tests/**

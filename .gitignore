@@ -1,0 +1,18 @@
+# Host-side artefacts
+.venv/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.env
+.DS_Store
+*.log
+
+# Local model clones (the image clones its own pinned copies)
+models/
+work/
+data/
+results/
+
+# Local build output
+dist/
+build/

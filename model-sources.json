@@ -1,0 +1,47 @@
+{
+  "pinned_on": "2026-11-23",
+  "workbench": "energy-models-workbench",
+  "models": [
+    {
+      "id": "pypsa-eur",
+      "name": "PyPSA-Eur",
+      "repository": "https://github.com/PyPSA/pypsa-eur",
+      "commit": "4b2822102a3b4b2c90be1b48bf221a2bb59e0d06",
+      "commit_date": "2026-11-20T06:16:19Z",
+      "license": "MIT (code); input-data licences vary by source",
+      "role": "Sector-coupled optimisation model of the European energy system",
+      "conda_env": "pypsa-eur",
+      "interface": "Snakemake workflow, driven from JupyterLab terminals or notebooks",
+      "data": "Downloaded on first run; see https://pypsa-eur.readthedocs.io/"
+    },
+    {
+      "id": "eu-flex",
+      "name": "EU-Flex",
+      "repository": "https://github.com/EU-ACER/eu-flex-model",
+      "commit": "65cb449bc1ddc3731f542337e1a0e5dbddc35536",
+      "commit_date": "2026-11-05T13:19:12Z",
+      "license": "MIT (code); CC-BY-4.0 (documentation and teaser); CC0-1.0 (configuration and other input data)",
+      "role": "PyPSA-based electricity-market and flexibility-needs model for Europe",
+      "conda_env": "eu-flex",
+      "interface": "Snakemake workflow with a teaser dataset and an analysis notebook",
+      "data": "Teaser dataset ships with the repository (data/teaser, about 3 MB)"
+    },
+    {
+      "id": "osemosys-studio",
+      "name": "Nour OSeMOSYS Studio",
+      "repository": "https://github.com/Islam-Dj/Nour-OSeMOSYS-Studio-Standard",
+      "commit": "1602afd56e47d444906f56d7ff5af8951ae87808",
+      "commit_date": "2026-11-11T13:54:50Z",
+      "license": "Apache-2.0 (Studio and standard OSeMOSYS model); GPL-3.0 (GLPK/swiglpk); EPL-2.0 (CBC); MIT (HiGHS)",
+      "role": "Desktop-style studio to build, check, solve and analyse OSeMOSYS models",
+      "conda_env": "osemosys",
+      "interface": "Web application on port 8775, proxied by JupyterLab at /proxy/8775/",
+      "data": "The standard OSeMOSYS model and a gas-and-solar example ship with the repository"
+    }
+  ],
+  "notes": [
+    "Commits were resolved from the upstream default branches on 2026-11-23.",
+    "The user's forks of the OSeMOSYS Studio and marco-BIS pointed at the same commits as upstream when this file was written.",
+    "marco-BIS is intentionally not included: it is a macroeconometric agent framework, not an energy-system model."
+  ]
+}

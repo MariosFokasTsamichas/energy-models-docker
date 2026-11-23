@@ -1,0 +1,41 @@
+Energy Models Workbench
+Copyright 2026 Marios Fokas Tsamichas
+
+This product bundles unmodified upstream model code, fetched at build time from
+the commits recorded in versions.env. The workbench's own code is licensed
+under Apache-2.0 (see LICENSE); the bundled components keep their own licences.
+
+Bundled model code
+  PyPSA-Eur
+    https://github.com/PyPSA/pypsa-eur
+    MIT License (code). Documentation is CC-BY-4.0. Input data carries the
+    licences of its sources; see doc/data_sources.md in that repository.
+    Copyright the PyPSA-Eur authors.
+
+  EU-Flex model
+    https://github.com/EU-ACER/eu-flex-model
+    MIT License. Copyright the contributors to the EU-Wide Flexibility Needs
+    Assessment Model.
+
+  Nour OSeMOSYS Studio
+    https://github.com/Islam-Dj/Nour-OSeMOSYS-Studio-Standard
+    Apache License 2.0. Copyright 2026 Nour Elislam DJEDAA, CREAD.
+    The standard OSeMOSYS model file is Apache-2.0, OSeMOSYS community /
+    UN DESA / KTH. Bundled third-party JavaScript libraries and fonts keep
+    their own licences; see NOTICE in that repository.
+
+Runtime and build tooling
+  micromamba / mamba        BSD-3-Clause, QuantStack
+  JupyterLab, Jupyter Server BSD-3-Clause, Project Jupyter
+  jupyter-server-proxy      BSD-3-Clause
+  Ubuntu 24.04 base image   Ubuntu licences, Canonical
+
+Solvers pulled in through conda-forge
+  GLPK (swiglpk, glpk)      GPL-3.0
+  CBC (coin-or-cbc)         EPL-2.0
+  HiGHS (highspy)           MIT
+  Gurobi (dependency of the pinned PyPSA-Eur environment; requires a licence
+  to solve, but is installed without one)
+
+No upstream source file is modified by this repository. Each model is cloned
+at the pinned commit and installed into its own conda environment.

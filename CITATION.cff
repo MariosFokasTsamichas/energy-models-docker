@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this workbench, cite it and the models it bundles."
+title: "Energy Models Workbench"
+abstract: >-
+  A JupyterLab container bundling three open energy-system models — PyPSA-Eur,
+  EU-Flex and Nour OSeMOSYS Studio — each in an isolated, pinned environment.
+type: software
+license: Apache-2.0
+date-released: "2026-11-23"
+version: "0.1.0"
+authors:
+  - family-names: "Fokas Tsamichas"
+    given-names: "Marios"
+repository-code: "https://github.com/MariosFokasTsamichas/energy-models-docker"
+keywords:
+  - energy system modelling
+  - capacity expansion
+  - flexibility
+  - OSeMOSYS
+  - PyPSA
+  - reproducibility
+  - docker
+references:
+  - type: software
+    title: "PyPSA-Eur: An Open Optimisation Model of the European Energy System"
+    repository-code: "https://github.com/PyPSA/pypsa-eur"
+    license: MIT
+  - type: software
+    title: "EU-Flex Model: EU-wide flexibility needs assessment workflow"
+    repository-code: "https://github.com/EU-ACER/eu-flex-model"
+    license: MIT
+  - type: software
+    title: "Nour OSeMOSYS Studio"
+    repository-code: "https://github.com/Islam-Dj/Nour-OSeMOSYS-Studio-Standard"
+    license: Apache-2.0

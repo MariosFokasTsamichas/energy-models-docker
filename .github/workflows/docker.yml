@@ -1,0 +1,164 @@
+name: docker
+
+# Build the workbench for both architectures on native runners, then merge the
+# per-architecture images into one multi-arch manifest and publish it to GHCR.
+#
+#   push to main   -> :latest, :sha-<short>, :main
+#   tag vX.Y.Z     -> :X.Y.Z, :X.Y, :latest, :sha-<short>
+#   pull request   -> linux/amd64 build only, nothing pushed
+#
+# The model commits come from versions.env, so CI builds the same sources as a
+# local `make build`.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    name: build ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    # A pull request only needs one architecture to prove the Dockerfile works.
+    if: github.event_name != 'pull_request' || matrix.arch == 'amd64'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            arch: arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read pins
+        id: pins
+        run: |
+          set -a
+          . ./versions.env
+          set +a
+          {
+            echo "image=${IMAGE_NAME}"
+            echo "pypsa_ref=${PYPSA_EUR_REF}"
+            echo "pypsa_repo=${PYPSA_EUR_REPO}"
+            echo "euflex_ref=${EU_FLEX_REF}"
+            echo "euflex_repo=${EU_FLEX_REPO}"
+            echo "osemosys_ref=${OSEMOSYS_REF}"
+            echo "osemosys_repo=${OSEMOSYS_REPO}"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          outputs: ${{ github.event_name != 'pull_request' && format('type=image,name={0},push-by-digest=true,name-canonical=true,push=true', steps.pins.outputs.image) || '' }}
+          build-args: |
+            PYPSA_EUR_REPO=${{ steps.pins.outputs.pypsa_repo }}
+            PYPSA_EUR_REF=${{ steps.pins.outputs.pypsa_ref }}
+            EU_FLEX_REPO=${{ steps.pins.outputs.euflex_repo }}
+            EU_FLEX_REF=${{ steps.pins.outputs.euflex_ref }}
+            OSEMOSYS_REPO=${{ steps.pins.outputs.osemosys_repo }}
+            OSEMOSYS_REF=${{ steps.pins.outputs.osemosys_ref }}
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+
+      - name: Record digest
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name != 'pull_request'
+        with:
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: publish multi-arch manifest
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read image name
+        id: pins
+        run: |
+          set -a
+          . ./versions.env
+          set +a
+          echo "image=${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.pins.outputs.image }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+      - name: Create manifest list
+        working-directory: /tmp/digests
+        run: |
+          set -euo pipefail
+          image="${{ steps.pins.outputs.image }}"
+          args=()
+          while IFS= read -r tag; do
+            args+=(-t "$tag")
+          done < <(jq -r '.tags[]' <<< "${DOCKER_METADATA_OUTPUT_JSON}")
+          sources=()
+          for digest in *; do
+            sources+=("${image}@sha256:${digest}")
+          done
+          docker buildx imagetools create "${args[@]}" "${sources[@]}"
+
+      - name: Inspect manifest
+        run: docker buildx imagetools inspect ${{ steps.pins.outputs.image }}:latest

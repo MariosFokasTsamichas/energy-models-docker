@@ -1,0 +1,55 @@
+name: checks
+
+# Fast static checks. They do not build the image; the docker workflow does.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax and lint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends shellcheck
+          shellcheck --severity=error scripts/*.sh
+          for script in scripts/*.sh; do bash -n "$script"; done
+
+      - name: Python syntax
+        run: |
+          python3 -m compileall -q tests config/jupyter
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          for path in Path("examples").glob("*.ipynb"):
+              document = json.loads(path.read_text())
+              assert document["nbformat"] == 4, path
+              assert document["cells"], path
+              print(f"{path}: {len(document['cells'])} cells")
+
+          json.loads(Path("model-sources.json").read_text())
+          print("model-sources.json: ok")
+          PY
+
+      - name: Pins are exact commits
+        run: |
+          set -euo pipefail
+          set -a; . ./versions.env; set +a
+          for ref in "$PYPSA_EUR_REF" "$EU_FLEX_REF" "$OSEMOSYS_REF"; do
+            if ! [[ "$ref" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "not a full commit SHA: $ref" >&2
+              exit 1
+            fi
+          done
+
+      - name: Compose file resolves
+        run: docker compose config -q

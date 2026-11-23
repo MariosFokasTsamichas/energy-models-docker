@@ -1,0 +1,14 @@
+version = 1
+SPDX-PackageName = "Energy Models Workbench"
+SPDX-PackageSupplier = "Marios Fokas Tsamichas"
+SPDX-PackageDownloadLocation = "https://github.com/MariosFokasTsamichas/energy-models-docker"
+
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2026 Marios Fokas Tsamichas"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["examples/*.ipynb", "docs/*.md", "README.md", "CONTRIBUTING.md"]
+SPDX-FileCopyrightText = "2026 Marios Fokas Tsamichas"
+SPDX-License-Identifier = "CC-BY-4.0"

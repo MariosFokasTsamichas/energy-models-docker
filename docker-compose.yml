@@ -1,0 +1,44 @@
+name: energy-models-workbench
+
+services:
+  workbench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PYPSA_EUR_REPO: ${PYPSA_EUR_REPO:-https://github.com/PyPSA/pypsa-eur.git}
+        PYPSA_EUR_REF: ${PYPSA_EUR_REF:-4b2822102a3b4b2c90be1b48bf221a2bb59e0d06}
+        EU_FLEX_REPO: ${EU_FLEX_REPO:-https://github.com/EU-ACER/eu-flex-model.git}
+        EU_FLEX_REF: ${EU_FLEX_REF:-65cb449bc1ddc3731f542337e1a0e5dbddc35536}
+        OSEMOSYS_REPO: ${OSEMOSYS_REPO:-https://github.com/Islam-Dj/Nour-OSeMOSYS-Studio-Standard.git}
+        OSEMOSYS_REF: ${OSEMOSYS_REF:-1602afd56e47d444906f56d7ff5af8951ae87808}
+    image: ${IMAGE_NAME:-ghcr.io/mariosfokastsamichas/energy-models-workbench}:${IMAGE_TAG:-latest}
+    container_name: energy-models-workbench
+    ports:
+      - "${JUPYTER_PORT:-8888}:8888"
+    environment:
+      # Inherited from the host when set; otherwise the entrypoint generates
+      # a token on first start and stores it in /work/.jupyter_token.
+      - JUPYTER_TOKEN
+      - START_OSEMOSYS_STUDIO=${START_OSEMOSYS_STUDIO:-1}
+      - UPDATE_MODELS=${UPDATE_MODELS:-0}
+      - UPDATE_EXAMPLES=${UPDATE_EXAMPLES:-0}
+    volumes:
+      - work:/work
+      - data:/data
+      - results:/results
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8888/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+
+volumes:
+  work:
+    name: energy-models-work
+  data:
+    name: energy-models-data
+  results:
+    name: energy-models-results
