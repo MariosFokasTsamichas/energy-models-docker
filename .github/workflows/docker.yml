@@ -29,8 +29,6 @@ jobs:
   build:
     name: build ${{ matrix.arch }}
     runs-on: ${{ matrix.runner }}
-    # A pull request only needs one architecture to prove the Dockerfile works.
-    if: github.event_name != 'pull_request' || matrix.arch == 'amd64'
     strategy:
       fail-fast: false
       matrix:
@@ -71,6 +69,9 @@ jobs:
 
       - name: Build and push by digest
         id: build
+        # A pull request only needs one architecture to prove the Dockerfile
+        # works; matrix is not available in a job-level `if`.
+        if: github.event_name != 'pull_request' || matrix.arch == 'amd64'
         uses: docker/build-push-action@v6
         with:
           context: .
